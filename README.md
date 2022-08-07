@@ -15,3 +15,10 @@ bevy version looking through branches.
 Example | Description
 --- | ---
 [Reparenting while keeping transform](./examples/reparenting_while_keeping_transform.rs) | Shows how to change a child parent and reconstruct its `Transform` so that its `GlobalTransform` remain unchanged.
+
+
+# Shaders
+
+Example | Description
+--- | ---
+[Background shader](./examples/shader_background.rs) | Shows how to create a 2D background shader changing with time.
