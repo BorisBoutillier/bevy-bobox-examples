@@ -1,3 +1,7 @@
+//! Shows how to modify a child [`Transform`] when reparenting so that its [`GlobalTransform`] remain unchanged
+//! Tap 'Space' to pause.
+//! Tap 'Left' or 'Right' to change the parent of the satellite
+
 use std::f32::consts::PI;
 
 use bevy::prelude::*;
@@ -132,22 +136,13 @@ pub fn interaction(
     mut commands: Commands,
     mut state: ResMut<State>,
     input: Res<Input<KeyCode>>,
-    mut transforms: Query<&mut Transform>,
+    transforms: Query<&Transform>,
     global_transforms: Query<&GlobalTransform>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     // Space to pause/unpause
     if input.just_pressed(KeyCode::Space) {
         state.paused = !state.paused;
-    }
-    // Up/Down arrows to move satellite, nearer/further from parent
-    if input.just_pressed(KeyCode::Up) {
-        let mut sat_transform = transforms.get_mut(state.sat).expect("Where is it ?");
-        sat_transform.translation *= 1.1;
-    }
-    if input.just_pressed(KeyCode::Down) {
-        let mut sat_transform = transforms.get_mut(state.sat).expect("Where is it ?");
-        sat_transform.translation *= 0.9;
     }
     // Any of Left/Right arrow will reparent the satellite to the other body
     if input.just_pressed(KeyCode::Left) || input.just_pressed(KeyCode::Right) {
