@@ -23,6 +23,8 @@ fn main() {
 pub struct Body;
 #[derive(Component)]
 pub struct Satellite;
+
+#[derive(Resource)]
 pub struct State {
     paused: bool,
     cur_parent_id: usize,
@@ -38,7 +40,7 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     // Spawn lights and camera for the scene
-    commands.spawn_bundle(PointLightBundle {
+    commands.spawn(PointLightBundle {
         point_light: PointLight {
             intensity: 3000.0,
             ..Default::default()
@@ -46,7 +48,7 @@ fn setup(
         transform: Transform::from_xyz(-2.0, 2.0, -1.0),
         ..Default::default()
     });
-    commands.spawn_bundle(PointLightBundle {
+    commands.spawn(PointLightBundle {
         point_light: PointLight {
             intensity: 3000.0,
             ..Default::default()
@@ -54,7 +56,7 @@ fn setup(
         transform: Transform::from_xyz(2.0, 2.0, 1.0),
         ..Default::default()
     });
-    commands.spawn_bundle(Camera3dBundle {
+    commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(2.0, 7.0, 5.0).looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
         ..Default::default()
     });
@@ -76,15 +78,17 @@ fn setup(
                 ..default()
             });
             commands
-                .spawn_bundle(MaterialMeshBundle {
-                    mesh: body_mesh.clone(),
-                    material,
-                    transform: Transform::from_xyz(-1.0 + 2.0 * i as f32, 0.0, 0.0)
-                        .with_rotation(Quat::from_rotation_x(PI / 2.0)), // Rotation so that 'north pole' is 'up'
-                    ..default()
-                })
-                .insert(Body)
-                .insert(Name::new(format!("Body{}", i)))
+                .spawn((
+                    MaterialMeshBundle {
+                        mesh: body_mesh.clone(),
+                        material,
+                        transform: Transform::from_xyz(-1.0 + 2.0 * i as f32, 0.0, 0.0)
+                            .with_rotation(Quat::from_rotation_x(PI / 2.0)), // Rotation so that 'north pole' is 'up'
+                        ..default()
+                    },
+                    Body,
+                    Name::new(format!("Body{}", i)),
+                ))
                 .id()
         })
         .collect::<Vec<_>>();
@@ -98,14 +102,16 @@ fn setup(
         ..default()
     });
     let sat = commands
-        .spawn_bundle(MaterialMeshBundle {
-            mesh: sat_mesh,
-            material: sat_material.clone(),
-            transform: Transform::from_xyz(1.0, 0.0, 0.0),
-            ..default()
-        })
-        .insert(Satellite)
-        .insert(Name::new("Satellite"))
+        .spawn((
+            MaterialMeshBundle {
+                mesh: sat_mesh,
+                material: sat_material.clone(),
+                transform: Transform::from_xyz(1.0, 0.0, 0.0),
+                ..default()
+            },
+            Satellite,
+            Name::new("Satellite"),
+        ))
         .id();
     commands.entity(bodies[0]).add_child(sat);
 
@@ -117,6 +123,14 @@ fn setup(
         sat,
         sat_material,
     });
+
+    // Instructions in stdout
+    println!("");
+    println!("");
+    println!("-----------------------------");
+    println!("[SPACE] To pause");
+    println!("[LEFT ARROW or RIGHT ARROW] To change the parent of the satellite");
+    println!("-----------------------------");
 }
 
 pub fn body_rotation(
@@ -146,7 +160,7 @@ pub fn interaction(
     }
     // Any of Left/Right arrow will reparent the satellite to the other body
     if input.just_pressed(KeyCode::Left) || input.just_pressed(KeyCode::Right) {
-        let new_parent_id = if state.cur_parent_id == 0 { 1 } else { 0 };
+        let new_parent_id = usize::from(state.cur_parent_id == 0);
         let new_parent = state.bodies[new_parent_id];
         let cur_parent = state.bodies[state.cur_parent_id];
         // Update satellite color to match new parent color
